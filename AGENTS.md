@@ -28,3 +28,7 @@ use the editor.
   own key and store it in Secrets.
 - **Secrets.** Lovable manages them. Do not put secret values in the repo.
 <!-- LOVABLE:END -->
+
+
+## Application Architecture
+- Keep the public company experience as separate metadata-bearing TanStack routes, with published public content read through a server function and public enquiries inserted only under database row policies, so page previews remain shareable and private records stay protected.

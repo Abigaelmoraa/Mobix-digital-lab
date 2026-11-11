@@ -33,7 +33,7 @@ function Contact() {
     e.preventDefault();
     const form = e.currentTarget;
     const parsed = schema.safeParse(Object.fromEntries(new FormData(form)));
-    if (!parsed.success) return setError(parsed.error.issues[0].message);
+    if (!parsed.success) return setError(parsed.error.issues[0]?.message ?? "Please check the form");
     setError(""); setState("sending");
     const { error: err } = await supabase.from("service_enquiries").insert(parsed.data);
     if (err) { setState("idle"); return setError("Sending failed. Please try again or use WhatsApp."); }

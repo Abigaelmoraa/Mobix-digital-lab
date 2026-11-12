@@ -32,3 +32,4 @@ use the editor.
 
 ## Application Architecture
 - Keep the public company experience as separate metadata-bearing TanStack routes, with published public content read through a server function and public enquiries inserted only under database row policies, so page previews remain shareable and private records stay protected.
+- Keep sign-in identity in a shared root auth provider and protect studio screens with the authenticated route gate plus existing admin-only database policies, so browser-created accounts cannot grant themselves publishing access.

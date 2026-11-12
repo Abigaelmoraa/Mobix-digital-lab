@@ -1,4 +1,8 @@
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
+import { useQueryClient } from "@tanstack/react-query";
+import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/use-auth";
+import { supabase } from "@/integrations/supabase/client";
 import { PHONE_DISPLAY, PHONE_TEL, WHATSAPP_URL } from "@/lib/contact";
 
 const nav = [
@@ -9,6 +13,17 @@ const nav = [
 ] as const;
 
 export function SiteHeader() {
+  const { user, loading } = useAuth();
+  const queryClient = useQueryClient();
+  const navigate = useNavigate();
+
+  async function signOut() {
+    await queryClient.cancelQueries();
+    queryClient.clear();
+    await supabase.auth.signOut();
+    await navigate({ to: "/auth", replace: true });
+  }
+
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-background/90 backdrop-blur">
       <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-5 py-4">
@@ -27,6 +42,9 @@ export function SiteHeader() {
               {n.label}
             </Link>
           ))}
+          {!loading && (user
+            ? <><Link to="/studio" className="rounded-full px-3 py-1.5 text-muted-foreground transition-colors hover:text-primary">Studio</Link><Button type="button" variant="ghost" size="sm" onClick={() => void signOut()}>Sign out</Button></>
+            : <Link to="/auth" className="rounded-full px-3 py-1.5 text-muted-foreground transition-colors hover:text-primary">Sign in</Link>)}
         </nav>
       </div>
     </header>

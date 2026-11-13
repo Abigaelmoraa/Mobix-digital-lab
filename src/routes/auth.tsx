@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useState, type ComponentProps, type FormEvent } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
@@ -53,7 +53,10 @@ function AuthPage() {
 
     setBusy(true);
     if (mode === "sign-in") {
-      const { error: authError } = await supabase.auth.signInWithPassword(parsed.data);
+      const { error: authError } = await supabase.auth.signInWithPassword({
+        email: parsed.data.email,
+        password: parsed.data.password,
+      });
       setBusy(false);
       if (authError) {
         setError(authError.message.toLowerCase().includes("confirm")
@@ -65,12 +68,19 @@ function AuthPage() {
       return;
     }
 
+    const signup = signUpSchema.safeParse(input);
+    if (!signup.success) {
+      setBusy(false);
+      setError(signup.error.issues[0]?.message ?? "Please check your details.");
+      return;
+    }
+
     const { error: authError, data } = await supabase.auth.signUp({
-      email: parsed.data.email,
-      password: parsed.data.password,
+      email: signup.data.email,
+      password: signup.data.password,
       options: {
         emailRedirectTo: window.location.origin,
-        data: { full_name: parsed.data.fullName, phone: parsed.data.phone },
+        data: { full_name: signup.data.fullName, phone: signup.data.phone },
       },
     });
     setBusy(false);
@@ -139,7 +149,7 @@ function AuthPage() {
   );
 }
 
-function Field({ label, name, ...props }: { label: string; name: string } & React.ComponentProps<typeof Input>) {
+function Field({ label, name, ...props }: { label: string; name: string } & ComponentProps<typeof Input>) {
   const id = `auth-${name}`;
   return (
     <div className="space-y-2">

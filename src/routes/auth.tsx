@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useState, type ComponentProps, type FormEvent } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
@@ -139,7 +139,7 @@ function AuthPage() {
   );
 }
 
-function Field({ label, name, ...props }: { label: string; name: string } & React.ComponentProps<typeof Input>) {
+function Field({ label, name, ...props }: { label: string; name: string } & ComponentProps<typeof Input>) {
   const id = `auth-${name}`;
   return (
     <div className="space-y-2">

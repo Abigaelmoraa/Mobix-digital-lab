@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useState, type ComponentProps, type FormEvent, type ReactNode } from "react";
 import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
@@ -232,12 +232,12 @@ function StudioDashboard() {
   );
 }
 
-function TextField({ label, value, onChange, ...props }: { label: string; value: string; onChange: (value: string) => void } & Omit<React.ComponentProps<typeof Input>, "value" | "onChange">) {
+function TextField({ label, value, onChange, ...props }: { label: string; value: string; onChange: (value: string) => void } & Omit<ComponentProps<typeof Input>, "value" | "onChange">) {
   const id = `studio-${label.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
   return <div className="space-y-2"><Label htmlFor={id}>{label}</Label><Input id={id} value={value} onChange={(event) => onChange(event.target.value)} {...props} /></div>;
 }
 
-function TextAreaField({ label, value, onChange, ...props }: { label: string; value: string; onChange: (value: string) => void } & Omit<React.ComponentProps<typeof Textarea>, "value" | "onChange">) {
+function TextAreaField({ label, value, onChange, ...props }: { label: string; value: string; onChange: (value: string) => void } & Omit<ComponentProps<typeof Textarea>, "value" | "onChange">) {
   const id = `studio-${label.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
   return <div className="space-y-2"><Label htmlFor={id}>{label}</Label><Textarea id={id} value={value} onChange={(event) => onChange(event.target.value)} {...props} /></div>;
 }
@@ -251,7 +251,7 @@ function FormActions({ editing, saving, onCancel }: { editing: boolean; saving: 
   return <div className="flex flex-wrap gap-3"><Button type="submit" disabled={saving}>{saving ? "Saving…" : editing ? "Save changes" : "Create listing"}</Button>{editing && <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>}</div>;
 }
 
-function ListingList({ loading, empty, kind, children }: { loading: boolean; empty: boolean; kind: "service" | "course"; children: React.ReactNode }) {
+function ListingList({ loading, empty, kind, children }: { loading: boolean; empty: boolean; kind: "service" | "course"; children: ReactNode }) {
   return <div aria-live="polite">
     {loading ? <p className="py-6 text-sm text-muted-foreground">Loading {kind} listings…</p>
       : empty ? <p className="border-b border-dashed border-border py-8 text-sm text-muted-foreground">No {kind} listings yet.</p>

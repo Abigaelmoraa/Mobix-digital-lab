@@ -59,6 +59,24 @@ export type Database = {
         }
         Relationships: []
       }
+      mobix_admin_bootstrap: {
+        Row: {
+          completed_at: string
+          completed_by: string
+          id: boolean
+        }
+        Insert: {
+          completed_at?: string
+          completed_by: string
+          id?: boolean
+        }
+        Update: {
+          completed_at?: string
+          completed_by?: string
+          id?: boolean
+        }
+        Relationships: []
+      }
       portfolio_projects: {
         Row: {
           category: string
@@ -241,6 +259,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      claim_mobix_first_admin: { Args: never; Returns: boolean }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

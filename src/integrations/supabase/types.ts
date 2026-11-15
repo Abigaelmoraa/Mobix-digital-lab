@@ -23,6 +23,7 @@ export type Database = {
           id: string
           is_free: boolean
           is_published: boolean
+          learning_outcomes: string[]
           level: string
           price_kes: number | null
           sort_order: number
@@ -37,6 +38,7 @@ export type Database = {
           id?: string
           is_free?: boolean
           is_published?: boolean
+          learning_outcomes?: string[]
           level?: string
           price_kes?: number | null
           sort_order?: number
@@ -51,6 +53,7 @@ export type Database = {
           id?: string
           is_free?: boolean
           is_published?: boolean
+          learning_outcomes?: string[]
           level?: string
           price_kes?: number | null
           sort_order?: number

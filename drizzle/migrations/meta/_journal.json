@@ -15,6 +15,13 @@
       "when": 1794615337834,
       "tag": "0001_secure_first_admin_bootstrap",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1794713496110,
+      "tag": "0002_add_course_learning_outcomes",
+      "breakpoints": true
     }
   ]
 }

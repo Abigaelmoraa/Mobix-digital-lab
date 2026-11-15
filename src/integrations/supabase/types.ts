@@ -23,10 +23,13 @@ export type Database = {
           id: string
           is_free: boolean
           is_published: boolean
+          learning_outcomes: string[]
           level: string
           price_kes: number | null
           sort_order: number
+          target_audience: string
           title: string
+          topics: string[]
           updated_at: string
         }
         Insert: {
@@ -37,10 +40,13 @@ export type Database = {
           id?: string
           is_free?: boolean
           is_published?: boolean
+          learning_outcomes?: string[]
           level?: string
           price_kes?: number | null
           sort_order?: number
+          target_audience?: string
           title: string
+          topics?: string[]
           updated_at?: string
         }
         Update: {
@@ -51,10 +57,13 @@ export type Database = {
           id?: string
           is_free?: boolean
           is_published?: boolean
+          learning_outcomes?: string[]
           level?: string
           price_kes?: number | null
           sort_order?: number
+          target_audience?: string
           title?: string
+          topics?: string[]
           updated_at?: string
         }
         Relationships: []

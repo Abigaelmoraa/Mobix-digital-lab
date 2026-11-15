@@ -1,9 +1,13 @@
 import { useEffect, useState, type ComponentProps, type FormEvent, type ReactNode } from "react";
 import { createFileRoute, useRouter } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
 import { useQueryClient } from "@tanstack/react-query";
+import { Sparkles } from "lucide-react";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
+import { claimFirstAdmin } from "@/lib/first-admin.functions";
+import { draftCourseContent } from "@/lib/course-draft.functions";
 import { hasStudioAccess } from "@/lib/studio-access";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
@@ -43,12 +47,15 @@ const courseSchema = z.object({
   description: z.string().trim().max(3000),
   level: z.string().trim().min(2).max(80),
   duration: z.string().trim().max(100),
+  topics: z.string().trim().max(3000),
+  targetAudience: z.string().trim().max(600),
+  learningOutcomes: z.string().max(1600),
   priceKes: z.string().trim().regex(/^$|^\d+$/, "Enter a whole amount in KES."),
   isFree: z.boolean(),
   isPublished: z.boolean(),
 });
 const blankService = { title: "", category: "Digital solutions", description: "", deliverables: "", isPublished: false };
-const blankCourse = { title: "", category: "Technology", description: "", level: "Beginner", duration: "", priceKes: "", isFree: false, isPublished: false };
+const blankCourse = { title: "", category: "Technology", description: "", level: "Beginner", duration: "", topics: "", targetAudience: "", learningOutcomes: "", priceKes: "", isFree: false, isPublished: false };
 
 function StudioDashboard() {
   const { canManageStudio, loading, user, studioRole } = useAuth();
@@ -61,10 +68,14 @@ function StudioDashboard() {
   const [editingCourse, setEditingCourse] = useState<string | null>(null);
   const [fetching, setFetching] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [drafting, setDrafting] = useState(false);
+  const [claiming, setClaiming] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const queryClient = useQueryClient();
   const router = useRouter();
+  const draftCourse = useServerFn(draftCourseContent);
+  const claimAdmin = useServerFn(claimFirstAdmin);
 
   useEffect(() => {
     if (loading || !canManageStudio) return;
@@ -126,6 +137,9 @@ function StudioDashboard() {
       description: parsed.data.description,
       level: parsed.data.level,
       duration: parsed.data.duration,
+      topics: parsed.data.topics.split("\n").map((item) => item.trim()).filter(Boolean),
+      target_audience: parsed.data.targetAudience,
+      learning_outcomes: parsed.data.learningOutcomes.split("\n").map((item) => item.trim()).filter(Boolean),
       is_free: parsed.data.isFree,
       price_kes: parsed.data.isFree ? null : price,
       is_published: parsed.data.isPublished,
@@ -143,6 +157,53 @@ function StudioDashboard() {
     await refreshPublicListings();
   }
 
+  async function generateCourseDraft() {
+    setError(""); setMessage("");
+    const parsed = courseSchema.safeParse(courseForm);
+    if (!parsed.success) { setError(parsed.error.issues[0]?.message ?? "Add the course title, level, topics, and audience first."); return; }
+    if (!parsed.data.topics.trim() || !parsed.data.targetAudience.trim()) {
+      setError("Add course topics and the intended audience before drafting.");
+      return;
+    }
+    setDrafting(true);
+    try {
+      const draft = await draftCourse({ data: {
+        title: parsed.data.title,
+        category: parsed.data.category,
+        level: parsed.data.level,
+        duration: parsed.data.duration,
+        topics: parsed.data.topics,
+        targetAudience: parsed.data.targetAudience,
+      } });
+      setCourseForm((current) => ({
+        ...current,
+        description: draft.description,
+        learningOutcomes: draft.learningOutcomes.join("\n"),
+      }));
+      setMessage("Draft ready. Review and edit it before saving.");
+    } catch {
+      setError("The course draft could not be generated. Please try again.");
+    } finally {
+      setDrafting(false);
+    }
+  }
+
+  async function setUpFirstAdmin() {
+    setError(""); setMessage(""); setClaiming(true);
+    try {
+      const result = await claimAdmin();
+      if (result.claimed) {
+        window.location.assign("/studio");
+        return;
+      }
+      setMessage("Studio access could not be set up for this account. Check that your email is confirmed or that setup has not already been completed.");
+    } catch {
+      setMessage("Studio access could not be set up for this account. Check that your email is confirmed or that setup has not already been completed.");
+    } finally {
+      setClaiming(false);
+    }
+  }
+
   async function refreshPublicListings() {
     await queryClient.invalidateQueries({ queryKey: ["public", "services"] });
     await queryClient.invalidateQueries({ queryKey: ["public", "courses"] });
@@ -157,7 +218,7 @@ function StudioDashboard() {
 
   function editCourse(item: CourseRow) {
     setTab("courses"); setEditingCourse(item.id); setEditingService(null);
-    setCourseForm({ title: item.title, category: item.category, description: item.description, level: item.level, duration: item.duration, priceKes: item.price_kes == null ? "" : String(item.price_kes), isFree: item.is_free, isPublished: item.is_published });
+    setCourseForm({ title: item.title, category: item.category, description: item.description, level: item.level, duration: item.duration, topics: item.topics.join("\n"), targetAudience: item.target_audience, learningOutcomes: item.learning_outcomes.join("\n"), priceKes: item.price_kes == null ? "" : String(item.price_kes), isFree: item.is_free, isPublished: item.is_published });
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
@@ -169,7 +230,9 @@ function StudioDashboard() {
         <p className="text-sm font-semibold text-secondary">MØBIX Digital Lab</p>
         <h1 className="mt-3 font-display text-4xl font-bold text-primary">Studio access pending</h1>
         <p className="mt-4 max-w-xl text-muted-foreground">{user?.email} is signed in, but this account does not have permission to manage or publish studio listings.</p>
-        <p className="mt-3 text-sm text-muted-foreground">Only an authorized studio administrator can grant publishing access. Your account remains private and cannot change services or courses.</p>
+        <p className="mt-3 text-sm text-muted-foreground">Publishing access can only be claimed by the studio owner’s confirmed account, once.</p>
+        <Button type="button" className="mt-6" disabled={claiming} onClick={() => void setUpFirstAdmin()}>{claiming ? "Checking account…" : "Set up studio access"}</Button>
+        {message && <p role="status" className="mt-4 text-sm text-muted-foreground">{message}</p>}
       </section>
     );
   }
@@ -215,6 +278,10 @@ function StudioDashboard() {
               <TextField label="Level" value={courseForm.level} onChange={(value) => setCourseForm({ ...courseForm, level: value })} required maxLength={80} />
               <TextField label="Duration" value={courseForm.duration} onChange={(value) => setCourseForm({ ...courseForm, duration: value })} maxLength={100} />
             </div>
+            <TextAreaField label="Course topics · one per line" value={courseForm.topics} onChange={(value) => setCourseForm({ ...courseForm, topics: value })} rows={4} maxLength={3000} />
+            <TextAreaField label="Intended audience" value={courseForm.targetAudience} onChange={(value) => setCourseForm({ ...courseForm, targetAudience: value })} rows={3} maxLength={600} />
+            <Button type="button" variant="outline" disabled={drafting || saving} onClick={() => void generateCourseDraft()}><Sparkles aria-hidden="true" />{drafting ? "Drafting course copy…" : "Draft with AI"}</Button>
+            <TextAreaField label="Learning outcomes · one per line" value={courseForm.learningOutcomes} onChange={(value) => setCourseForm({ ...courseForm, learningOutcomes: value })} rows={4} maxLength={1600} />
             <TextField label="Fee in KES · blank if not set" type="number" min="0" step="1" value={courseForm.priceKes} onChange={(value) => setCourseForm({ ...courseForm, priceKes: value })} disabled={courseForm.isFree} />
             <PublishToggle checked={courseForm.isFree} onCheckedChange={(value) => setCourseForm({ ...courseForm, isFree: value })} label="Free course" />
             <PublishToggle checked={courseForm.isPublished} onCheckedChange={(value) => setCourseForm({ ...courseForm, isPublished: value })} />

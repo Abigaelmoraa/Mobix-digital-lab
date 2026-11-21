@@ -1,7 +1,6 @@
 import { useState, type ComponentProps, type FormEvent } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { z } from "zod";
-import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -36,7 +35,7 @@ function AuthPage() {
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [busy, setBusy] = useState(false);
-  const { user, loading } = useAuth();
+  const { user, loading, signIn, signUp } = useAuth();
   const navigate = useNavigate();
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
@@ -45,101 +44,113 @@ function AuthPage() {
     setNotice("");
     const form = new FormData(event.currentTarget);
     const input = Object.fromEntries(form.entries());
-    const parsed = mode === "sign-in" ? signInSchema.safeParse(input) : signUpSchema.safeParse(input);
+    const parsed =
+      mode === "sign-in" ? signInSchema.safeParse(input) : signUpSchema.safeParse(input);
     if (!parsed.success) {
       setError(parsed.error.issues[0]?.message ?? "Please check your details.");
       return;
     }
 
     setBusy(true);
-    if (mode === "sign-in") {
-      const { error: authError } = await supabase.auth.signInWithPassword({
-        email: parsed.data.email,
-        password: parsed.data.password,
-      });
-      setBusy(false);
-      if (authError) {
-        setError(authError.message.toLowerCase().includes("confirm")
-          ? "Please confirm your email address before signing in."
-          : "We couldn't sign you in. Check your email and password and try again.");
-        return;
+    try {
+      if (mode === "sign-in") {
+        await signIn(parsed.data.email, parsed.data.password);
+      } else {
+        const signup = signUpSchema.safeParse(input);
+        if (!signup.success) {
+          setError(signup.error.issues[0]?.message ?? "Please check your details.");
+          return;
+        }
+        await signUp({
+          fullName: signup.data.fullName,
+          email: signup.data.email,
+          password: signup.data.password,
+          phone: signup.data.phone,
+        });
       }
       await navigate({ to: "/studio" });
-      return;
-    }
-
-    const signup = signUpSchema.safeParse(input);
-    if (!signup.success) {
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "We couldn't complete your request. Please try again.",
+      );
+    } finally {
       setBusy(false);
-      setError(signup.error.issues[0]?.message ?? "Please check your details.");
-      return;
     }
-
-    const { error: authError, data } = await supabase.auth.signUp({
-      email: signup.data.email,
-      password: signup.data.password,
-      options: {
-        emailRedirectTo: window.location.origin,
-        data: { full_name: signup.data.fullName, phone: signup.data.phone },
-      },
-    });
-    setBusy(false);
-    if (authError) {
-      setError("Account creation failed. Check your details and try again.");
-      return;
-    }
-    if (!data.session) {
-      setNotice("Your account was created. Check your email to confirm it, then sign in.");
-      setMode("sign-in");
-      return;
-    }
-    await navigate({ to: "/studio" });
   }
 
   if (loading) {
-    return <div className="mx-auto max-w-lg px-5 py-20 text-sm text-muted-foreground">Checking account…</div>;
+    return (
+      <div className="mx-auto max-w-lg px-5 py-20 text-base text-muted-foreground">
+        Checking account…
+      </div>
+    );
   }
 
   if (user) {
     return (
       <section className="mx-auto max-w-lg px-5 py-20">
-        <p className="text-sm font-semibold text-secondary">MØBIX Digital Lab</p>
+        <p className="text-base font-semibold text-secondary">MØBIX Digital Lab</p>
         <h1 className="mt-3 font-display text-4xl font-bold text-primary">You’re signed in</h1>
         <p className="mt-3 text-muted-foreground">{user.email}</p>
-        <Button className="mt-7" onClick={() => void navigate({ to: "/studio" })}>Open studio</Button>
+        <Button className="mt-7" onClick={() => void navigate({ to: "/studio" })}>
+          Open studio
+        </Button>
       </section>
     );
   }
 
   return (
     <section className="mx-auto max-w-lg px-5 py-16 sm:py-24">
-      <p className="text-sm font-semibold text-secondary">MØBIX Digital Lab</p>
+      <p className="text-base font-semibold text-secondary">MØBIX Digital Lab</p>
       <h1 className="mt-3 font-display text-4xl font-bold text-primary">
         {mode === "sign-in" ? "Welcome back" : "Create your account"}
       </h1>
       <p className="mt-3 text-muted-foreground">
-        {mode === "sign-in" ? "Sign in to continue to your account." : "Your name and phone number are saved with your account."}
+        {mode === "sign-in"
+          ? "Sign in to continue to your account."
+          : "Your name and phone number are saved with your account."}
       </p>
 
       <form onSubmit={onSubmit} className="mt-8 space-y-5" noValidate>
-        {mode === "sign-up" && <>
-          <Field label="Full name" name="fullName" autoComplete="name" maxLength={120} />
-          <Field label="Phone number" name="phone" autoComplete="tel" maxLength={40} />
-        </>}
+        {mode === "sign-up" && (
+          <>
+            <Field label="Full name" name="fullName" autoComplete="name" maxLength={120} />
+            <Field label="Phone number" name="phone" autoComplete="tel" maxLength={40} />
+          </>
+        )}
         <Field label="Email" name="email" type="email" autoComplete="email" maxLength={255} />
-        <Field label="Password" name="password" type="password" autoComplete={mode === "sign-in" ? "current-password" : "new-password"} minLength={8} maxLength={128} />
-        {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
-        {notice && <p role="status" className="text-sm text-secondary">{notice}</p>}
+        <Field
+          label="Password"
+          name="password"
+          type="password"
+          autoComplete={mode === "sign-in" ? "current-password" : "new-password"}
+          minLength={8}
+          maxLength={128}
+        />
+        {error && (
+          <p role="alert" className="text-base text-destructive">
+            {error}
+          </p>
+        )}
+        {notice && (
+          <p role="status" className="text-base text-secondary">
+            {notice}
+          </p>
+        )}
         <Button type="submit" disabled={busy} className="w-full">
           {busy ? "Please wait…" : mode === "sign-in" ? "Sign in" : "Create account"}
         </Button>
       </form>
 
-      <p className="mt-6 text-sm text-muted-foreground">
+      <p className="mt-6 text-base text-muted-foreground">
         {mode === "sign-in" ? "New to MØBIX?" : "Already have an account?"}{" "}
         <button
           type="button"
-          onClick={() => { setMode(mode === "sign-in" ? "sign-up" : "sign-in"); setError(""); setNotice(""); }}
+          onClick={() => {
+            setMode(mode === "sign-in" ? "sign-up" : "sign-in");
+            setError("");
+            setNotice("");
+          }}
           className="font-semibold text-secondary underline underline-offset-4"
         >
           {mode === "sign-in" ? "Create an account" : "Sign in"}
@@ -149,7 +160,11 @@ function AuthPage() {
   );
 }
 
-function Field({ label, name, ...props }: { label: string; name: string } & ComponentProps<typeof Input>) {
+function Field({
+  label,
+  name,
+  ...props
+}: { label: string; name: string } & ComponentProps<typeof Input>) {
   const id = `auth-${name}`;
   return (
     <div className="space-y-2">

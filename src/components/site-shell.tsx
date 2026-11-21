@@ -33,7 +33,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { PHONE_DISPLAY, PHONE_TEL } from "@/lib/contact";
 
 const nav = [
-  { to: "/home", label: "Home" },
+  { to: "/home", label: "Dashboard" },
   { to: "/services", label: "Services" },
   { to: "/courses", label: "Courses" },
   { to: "/contact", label: "Contact" },
@@ -91,7 +91,7 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
             className="rounded-full px-4 py-2 text-muted-foreground transition-colors hover:bg-accent hover:text-primary"
             activeProps={{ className: "bg-accent text-primary" }}
           >
-            Dashboard
+            Studio admin
           </Link>
         )}
         <ApplicationDialog className="mt-3 w-full" />
@@ -216,7 +216,7 @@ export function SiteHeader() {
               {canManageStudio && (
                 <DropdownMenuItem onSelect={() => void navigate({ to: "/studio" })}>
                   <LayoutDashboard aria-hidden="true" />
-                  Studio dashboard
+                  Studio admin
                 </DropdownMenuItem>
               )}
               {!user && (

@@ -1,20 +1,22 @@
+import type { ReactNode } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import {
   ArrowRight,
+  BookOpen,
+  BriefcaseBusiness,
+  CalendarDays,
   CheckCircle2,
-  Code2,
   GraduationCap,
-  Lightbulb,
+  LayoutDashboard,
   MessageCircle,
-  Palette,
+  Settings,
   Sparkles,
-  Users,
+  UserRound,
 } from "lucide-react";
 
-import studio from "@/assets/mobix-studio.jpg";
-import { CourseCard, EmptyNote, LoadError, ServiceCard } from "@/components/listings";
-import { WHATSAPP_URL } from "@/lib/contact";
+import { EmptyNote, LoadError } from "@/components/listings";
+import { useAuth } from "@/hooks/use-auth";
 import { coursesQuery, servicesQuery } from "@/lib/public-queries";
 
 export const Route = createFileRoute("/_authenticated/home")({
@@ -25,254 +27,250 @@ export const Route = createFileRoute("/_authenticated/home")({
     ]),
   head: () => ({
     meta: [
-      { title: "MØBIX Digital Lab — Digital studio in Nairobi" },
+      { title: "Dashboard — MØBIX Digital Lab" },
       {
         name: "description",
-        content:
-          "MØBIX Digital Lab builds digital solutions and runs practical technology courses in Nairobi, Kenya.",
-      },
-      { property: "og:title", content: "MØBIX Digital Lab — Digital studio in Nairobi" },
-      {
-        property: "og:description",
-        content:
-          "MØBIX Digital Lab builds digital solutions and runs practical technology courses in Nairobi, Kenya.",
+        content: "Your MØBIX Digital Lab dashboard for courses, services, and studio updates.",
       },
     ],
   }),
   errorComponent: LoadError,
-  component: Home,
+  component: Dashboard,
 });
 
-const features = [
-  {
-    icon: Palette,
-    title: "Design with purpose",
-    text: "Clear, usable interfaces shaped around the people who will actually use them.",
-  },
-  {
-    icon: Code2,
-    title: "Built to last",
-    text: "Practical engineering, careful handover, and room to grow after launch.",
-  },
-  {
-    icon: GraduationCap,
-    title: "Skills you keep",
-    text: "Hands-on training that takes learners from first steps to confident practice.",
-  },
-];
-
-const steps = [
-  {
-    icon: MessageCircle,
-    title: "Tell us the goal",
-    text: "Share the project, the learners, or the problem you want solved.",
-  },
-  {
-    icon: Lightbulb,
-    title: "Shape the approach",
-    text: "We agree on scope, timeline, and the simplest route to a useful result.",
-  },
-  {
-    icon: CheckCircle2,
-    title: "Build and hand over",
-    text: "We deliver, test together, and leave you with everything needed to continue.",
-  },
-];
-
-function Home() {
+function Dashboard() {
   const { data: services } = useSuspenseQuery(servicesQuery);
   const { data: courses } = useSuspenseQuery(coursesQuery);
+  const { user, canManageStudio } = useAuth();
+
+  const firstName = user?.full_name.trim().split(/\s+/)[0] ?? "there";
+  const today = new Intl.DateTimeFormat("en-KE", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  }).format(new Date());
+
+  const actions = [
+    {
+      title: "Browse courses",
+      text: "Find practical training you can start right away.",
+      icon: GraduationCap,
+      to: "/courses",
+    },
+    {
+      title: "Explore services",
+      text: "See what the studio can design, build, and automate.",
+      icon: BriefcaseBusiness,
+      to: "/services",
+    },
+    {
+      title: "Send an enquiry",
+      text: "Tell us about a project or a class you have in mind.",
+      icon: MessageCircle,
+      to: "/contact",
+    },
+    ...(canManageStudio
+      ? [
+          {
+            title: "Studio admin",
+            text: "Manage published content and studio activity.",
+            icon: LayoutDashboard,
+            to: "/studio" as const,
+          },
+        ]
+      : []),
+    {
+      title: "Your profile",
+      text: "Update the details saved on your account.",
+      icon: UserRound,
+      to: "/profile",
+    },
+    {
+      title: "Settings",
+      text: "Adjust your account preferences.",
+      icon: Settings,
+      to: "/settings",
+    },
+  ];
 
   return (
-    <>
-      <section className="relative overflow-hidden border-b border-border bg-[radial-gradient(circle_at_top_left,rgba(180,91,180,0.18),transparent_42%)]">
-        <div className="mx-auto grid max-w-6xl items-center gap-12 px-5 py-16 md:grid-cols-[1.05fr_0.95fr] md:py-24">
+    <div className="mx-auto max-w-6xl">
+      <section className="overflow-hidden rounded-4xl border border-border bg-[radial-gradient(circle_at_top_right,rgba(180,91,180,0.2),transparent_45%)] bg-card p-7 md:p-10">
+        <div className="flex flex-wrap items-start justify-between gap-6">
           <div>
-            <p className="inline-flex items-center gap-2 rounded-full border border-secondary/30 bg-secondary/10 px-4 py-2 text-sm font-semibold uppercase tracking-[0.16em] text-secondary">
+            <p className="inline-flex items-center gap-2 rounded-full border border-secondary/30 bg-secondary/10 px-4 py-2 text-sm font-semibold uppercase tracking-[0.14em] text-secondary">
               <Sparkles className="size-4" />
-              Nairobi · Digital studio &amp; training lab
+              Your workspace
             </p>
-            <h1 className="mt-6 font-display text-5xl font-bold leading-[1.05] text-primary md:text-7xl">
-              Digital work, built with care. Skills, taught in practice.
+            <h1 className="mt-5 font-display text-4xl font-bold text-primary md:text-5xl">
+              Welcome back, {firstName}
             </h1>
-            <p className="mt-6 max-w-xl text-lg leading-relaxed text-muted-foreground md:text-xl">
-              MØBIX Digital Lab helps businesses launch useful digital products and helps learners
-              gain technology skills they can actually use.
+            <p className="mt-3 max-w-2xl text-lg leading-relaxed text-muted-foreground">
+              Here is what is happening at MØBIX Digital Lab. Pick up where you left off or explore
+              something new.
             </p>
-            <div className="mt-8 flex flex-wrap gap-3">
-              <Link
-                to="/contact"
-                className="inline-flex items-center gap-2 rounded-full bg-primary px-7 py-4 text-base font-semibold text-primary-foreground transition hover:opacity-90"
-              >
-                Start an enquiry
-                <ArrowRight className="size-5" />
-              </Link>
-              <a
-                href={WHATSAPP_URL}
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center gap-2 rounded-full border border-secondary px-7 py-4 text-base font-semibold text-secondary transition hover:bg-accent"
-              >
-                <MessageCircle className="size-5" />
-                Chat on WhatsApp
-              </a>
-            </div>
-            <div className="mt-10 grid gap-4 border-t border-border pt-8 sm:grid-cols-3">
-              <Stat value="1:1" label="Project attention" />
-              <Stat value="Practical" label="Training approach" />
-              <Stat value="Local" label="Nairobi based" />
-            </div>
           </div>
-          <div className="relative">
-            <img
-              src={studio}
-              alt="Inside the MØBIX Digital Lab studio"
-              className="aspect-[4/3] w-full rounded-4xl object-cover shadow-2xl"
-            />
-            <div className="absolute -bottom-5 -left-5 hidden rounded-2xl border border-border bg-card px-5 py-4 shadow-xl sm:block">
-              <p className="font-display text-2xl font-bold text-primary">Learn. Build. Launch.</p>
-              <p className="mt-1 text-sm text-muted-foreground">One studio, two ways to grow.</p>
-            </div>
+          <div className="rounded-2xl border border-border bg-background px-5 py-4 text-base shadow-sm">
+            <p className="flex items-center gap-2 font-semibold text-primary">
+              <CalendarDays className="size-4 text-secondary" />
+              Today
+            </p>
+            <p className="mt-1 text-sm text-muted-foreground">{today}</p>
           </div>
         </div>
       </section>
 
-      <section className="mx-auto max-w-6xl px-5 py-16 md:py-20">
-        <SectionIntro
-          eyebrow="What we do"
-          title="One lab, built for making things happen"
-          text="We work with founders, teams, and curious learners. The thread is always the same: useful outcomes, explained clearly."
+      <section className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <StatCard
+          icon={BookOpen}
+          label="Published courses"
+          value={String(courses.length)}
+          hint="Available to learners"
         />
-        <div className="mt-10 grid gap-5 md:grid-cols-3">
-          {features.map(({ icon: Icon, title, text }) => (
-            <div key={title} className="rounded-3xl border border-border bg-card p-7">
-              <div className="flex size-12 items-center justify-center rounded-2xl bg-accent text-secondary">
-                <Icon className="size-6" />
+        <StatCard
+          icon={BriefcaseBusiness}
+          label="Studio services"
+          value={String(services.length)}
+          hint="Ready to explore"
+        />
+        <StatCard
+          icon={CheckCircle2}
+          label="Account status"
+          value="Active"
+          hint="Signed in and ready"
+        />
+        <StatCard
+          icon={LayoutDashboard}
+          label="Your access"
+          value={canManageStudio ? "Admin" : (user?.role ?? "Member")}
+          hint={canManageStudio ? "Studio management enabled" : "Standard member access"}
+        />
+      </section>
+
+      <section className="mt-10">
+        <SectionHeading title="Quick actions" />
+        <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {actions.map(({ title, text, icon: Icon, to }) => (
+            <Link
+              key={title}
+              to={to}
+              className="group rounded-3xl border border-border bg-card p-6 transition-shadow hover:shadow-lg"
+            >
+              <div className="flex size-11 items-center justify-center rounded-2xl bg-accent text-secondary">
+                <Icon className="size-5" />
               </div>
-              <h3 className="mt-5 font-display text-2xl font-bold text-primary">{title}</h3>
-              <p className="mt-2 text-base leading-relaxed text-muted-foreground">{text}</p>
-            </div>
+              <h3 className="mt-5 font-display text-xl font-bold text-primary">{title}</h3>
+              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{text}</p>
+              <span className="mt-5 inline-flex items-center gap-1 text-sm font-semibold text-secondary group-hover:underline">
+                Open
+                <ArrowRight className="size-4" />
+              </span>
+            </Link>
           ))}
         </div>
       </section>
 
-      <section className="mx-auto max-w-6xl px-5 pb-16 md:pb-20">
-        <Heading title="Services" to="/services" />
-        {services.length ? (
-          <div className="grid gap-5 md:grid-cols-3">
-            {services.slice(0, 3).map((s) => (
-              <ServiceCard key={s.id} s={s} />
-            ))}
-          </div>
-        ) : (
-          <EmptyNote>
-            Our service list is being prepared. Contact us to discuss your project.
-          </EmptyNote>
-        )}
-      </section>
-
-      <section className="bg-accent py-16 md:py-20">
-        <div className="mx-auto max-w-6xl px-5">
-          <Heading title="Courses" to="/courses" />
+      <section className="mt-10 grid gap-6 lg:grid-cols-2">
+        <PreviewPanel title="Latest courses" to="/courses" linkLabel="All courses">
           {courses.length ? (
-            <div className="grid gap-5 md:grid-cols-3">
-              {courses.slice(0, 3).map((c) => (
-                <CourseCard key={c.id} c={c} />
+            <ul className="divide-y divide-border">
+              {courses.slice(0, 4).map((course) => (
+                <li
+                  key={course.id}
+                  className="flex items-center justify-between gap-4 py-4 first:pt-0"
+                >
+                  <div className="min-w-0">
+                    <p className="truncate font-semibold text-primary">{course.title}</p>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      {course.level} · {course.duration || "Duration on enquiry"}
+                    </p>
+                  </div>
+                  <span className="shrink-0 rounded-full bg-accent px-3 py-1 text-xs font-semibold text-secondary">
+                    {course.is_free ? "Free" : "Paid"}
+                  </span>
+                </li>
               ))}
-            </div>
+            </ul>
           ) : (
             <EmptyNote>New courses will be announced soon.</EmptyNote>
           )}
-        </div>
-      </section>
+        </PreviewPanel>
 
-      <section className="mx-auto max-w-6xl px-5 py-16 md:py-20">
-        <SectionIntro
-          eyebrow="How we work"
-          title="A clear path from idea to outcome"
-          text="No jargon, no mystery. Just a focused process that keeps the goal visible."
-        />
-        <div className="mt-10 grid gap-6 md:grid-cols-3">
-          {steps.map(({ icon: Icon, title, text }, index) => (
-            <div key={title} className="relative rounded-3xl border border-border bg-card p-7">
-              <span className="font-display text-5xl font-bold text-secondary/20">
-                0{index + 1}
-              </span>
-              <Icon className="mt-3 size-7 text-secondary" />
-              <h3 className="mt-4 text-xl font-bold text-primary">{title}</h3>
-              <p className="mt-2 text-base leading-relaxed text-muted-foreground">{text}</p>
-            </div>
-          ))}
-        </div>
+        <PreviewPanel title="Studio services" to="/services" linkLabel="All services">
+          {services.length ? (
+            <ul className="divide-y divide-border">
+              {services.slice(0, 4).map((service) => (
+                <li key={service.id} className="py-4 first:pt-0">
+                  <p className="font-semibold text-primary">{service.title}</p>
+                  <p className="mt-1 text-sm text-muted-foreground">{service.category}</p>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <EmptyNote>Our service list is being prepared.</EmptyNote>
+          )}
+        </PreviewPanel>
       </section>
-
-      <section className="bg-ink text-ink-foreground">
-        <div className="mx-auto flex max-w-6xl flex-col items-start justify-between gap-8 px-5 py-16 md:flex-row md:items-center md:py-20">
-          <div className="max-w-2xl">
-            <Users className="size-8 text-secondary" />
-            <h2 className="mt-4 font-display text-3xl font-bold md:text-5xl">
-              Have a project or a class in mind?
-            </h2>
-            <p className="mt-3 text-lg opacity-80">
-              Tell us what you are working on. We will help you find the next practical step.
-            </p>
-          </div>
-          <div className="flex flex-wrap gap-3">
-            <Link
-              to="/contact"
-              className="inline-flex items-center gap-2 rounded-full bg-primary-foreground px-7 py-4 text-base font-semibold text-primary"
-            >
-              Send an enquiry
-              <ArrowRight className="size-5" />
-            </Link>
-            <a
-              href={WHATSAPP_URL}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center gap-2 rounded-full border border-current px-7 py-4 text-base font-semibold"
-            >
-              <MessageCircle className="size-5" />
-              WhatsApp us
-            </a>
-          </div>
-        </div>
-      </section>
-    </>
-  );
-}
-
-function Stat({ value, label }: { value: string; label: string }) {
-  return (
-    <div>
-      <p className="font-display text-2xl font-bold text-primary">{value}</p>
-      <p className="text-sm font-medium text-muted-foreground">{label}</p>
     </div>
   );
 }
 
-function SectionIntro({ eyebrow, title, text }: { eyebrow: string; title: string; text: string }) {
+function StatCard({
+  icon: Icon,
+  label,
+  value,
+  hint,
+}: {
+  icon: typeof BookOpen;
+  label: string;
+  value: string;
+  hint: string;
+}) {
   return (
-    <div className="max-w-3xl">
-      <p className="text-sm font-semibold uppercase tracking-[0.18em] text-secondary">{eyebrow}</p>
-      <h2 className="mt-3 font-display text-4xl font-bold leading-tight text-primary md:text-5xl">
-        {title}
-      </h2>
-      <p className="mt-4 text-lg leading-relaxed text-muted-foreground">{text}</p>
+    <div className="rounded-3xl border border-border bg-card p-6">
+      <div className="flex size-10 items-center justify-center rounded-2xl bg-accent text-secondary">
+        <Icon className="size-5" />
+      </div>
+      <p className="mt-5 text-sm font-medium text-muted-foreground">{label}</p>
+      <p className="mt-1 font-display text-3xl font-bold text-primary">{value}</p>
+      <p className="mt-1 text-xs text-muted-foreground">{hint}</p>
     </div>
   );
 }
 
-function Heading({ title, to }: { title: string; to: "/services" | "/courses" }) {
+function SectionHeading({ title }: { title: string }) {
   return (
-    <div className="mb-8 flex items-end justify-between gap-4">
-      <h2 className="font-display text-3xl font-bold text-primary md:text-4xl">{title}</h2>
-      <Link
-        to={to}
-        className="inline-flex items-center gap-1 text-base font-semibold text-secondary hover:underline"
-      >
-        See all
-        <ArrowRight className="size-4" />
-      </Link>
+    <div className="flex items-end justify-between gap-4">
+      <h2 className="font-display text-2xl font-bold text-primary md:text-3xl">{title}</h2>
+    </div>
+  );
+}
+
+function PreviewPanel({
+  title,
+  to,
+  linkLabel,
+  children,
+}: {
+  title: string;
+  to: "/courses" | "/services";
+  linkLabel: string;
+  children: ReactNode;
+}) {
+  return (
+    <div className="rounded-3xl border border-border bg-card p-6 md:p-7">
+      <div className="flex items-center justify-between gap-4 border-b border-border pb-5">
+        <h2 className="font-display text-xl font-bold text-primary">{title}</h2>
+        <Link
+          to={to}
+          className="inline-flex items-center gap-1 text-sm font-semibold text-secondary hover:underline"
+        >
+          {linkLabel}
+          <ArrowRight className="size-4" />
+        </Link>
+      </div>
+      <div className="pt-5">{children}</div>
     </div>
   );
 }

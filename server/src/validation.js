@@ -21,6 +21,14 @@ export const applicationSchema = z.object({
   message: z.string().trim().max(2000).optional().default(""),
 });
 
+export const enrollmentSchema = z.object({
+  course_id: z.string().uuid("Choose a published course"),
+  full_name: z.string().trim().min(2, "Please enter your full name").max(120),
+  email: z.string().trim().email("Enter a valid email").max(255),
+  phone: z.string().trim().min(7, "Enter a valid phone number").max(40),
+  message: z.string().trim().max(2000).optional().default(""),
+});
+
 export const enquirySchema = z.object({
   full_name: z.string().trim().min(2).max(120),
   email: z.string().trim().email().max(255),

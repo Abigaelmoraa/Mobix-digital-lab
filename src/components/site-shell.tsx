@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import type { ReactNode } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import {
   Bell,
@@ -9,7 +9,6 @@ import {
   LogIn,
   LogOut,
   MapPin,
-  Menu,
   MessageCircle,
   Send,
   Settings,
@@ -28,14 +27,15 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { useAuth } from "@/hooks/use-auth";
 import { PHONE_DISPLAY, PHONE_TEL } from "@/lib/contact";
 
 const nav = [
-  { to: "/home", label: "Dashboard" },
-  { to: "/services", label: "Services" },
+  { to: "/", label: "Home" },
+  { to: "/about", label: "About" },
   { to: "/courses", label: "Courses" },
+  { to: "/services", label: "Services" },
+  { to: "/admissions", label: "Admissions" },
   { to: "/contact", label: "Contact" },
 ] as const;
 
@@ -56,116 +56,54 @@ function TikTokIcon({ className }: { className?: string }) {
   );
 }
 
-function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
+export function SiteHeader() {
   const { user, canManageStudio, signOut } = useAuth();
   const navigate = useNavigate();
+  const initials = user ? getInitials(user.full_name) : "";
 
   async function logOut() {
     await signOut();
     await navigate({ to: "/", replace: true });
-    onNavigate?.();
   }
 
-  return (
-    <div className="flex h-full flex-col gap-6">
-      <Link to="/" onClick={onNavigate} aria-label="MØBIX Digital Lab home">
-        <MobixLogo />
-      </Link>
-      <nav className="flex flex-col gap-1 text-base font-medium" aria-label="Main navigation">
-        {nav.map((item) => (
-          <Link
-            key={item.to}
-            to={item.to}
-            onClick={onNavigate}
-            activeOptions={{ exact: item.to === "/home" }}
-            className="rounded-full px-4 py-2 text-muted-foreground transition-colors hover:bg-accent hover:text-primary"
-            activeProps={{ className: "bg-accent text-primary" }}
-          >
-            {item.label}
-          </Link>
-        ))}
-        {canManageStudio && (
-          <Link
-            to="/studio"
-            onClick={onNavigate}
-            className="rounded-full px-4 py-2 text-muted-foreground transition-colors hover:bg-accent hover:text-primary"
-            activeProps={{ className: "bg-accent text-primary" }}
-          >
-            Studio admin
-          </Link>
-        )}
-        <ApplicationDialog className="mt-3 w-full" />
-      </nav>
-      <div className="mt-auto space-y-3 border-t border-border pt-5">
-        {user ? (
-          <>
-            <p className="truncate px-3 text-sm text-muted-foreground">{user.email}</p>
-            <Button
-              type="button"
-              variant="outline"
-              className="w-full justify-start"
-              onClick={() => void logOut()}
-            >
-              <LogOut aria-hidden="true" />
-              Sign out
-            </Button>
-          </>
-        ) : (
-          <Link
-            to="/auth"
-            onClick={onNavigate}
-            className="flex w-full items-center justify-center gap-2 rounded-md border border-input bg-background px-4 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-accent"
-          >
-            <LogIn aria-hidden="true" className="size-4" />
-            Sign in
-          </Link>
-        )}
-      </div>
-    </div>
+  const navLinks = (
+    <>
+      {nav.map((item) => (
+        <Link
+          key={item.to}
+          to={item.to}
+          activeOptions={{ exact: item.to === "/" }}
+          activeProps={{ className: "font-semibold text-primary" }}
+          className="whitespace-nowrap transition-colors hover:text-primary"
+        >
+          {item.label}
+        </Link>
+      ))}
+      {canManageStudio && (
+        <Link
+          to="/studio"
+          activeProps={{ className: "font-semibold text-primary" }}
+          className="whitespace-nowrap transition-colors hover:text-primary"
+        >
+          Studio admin
+        </Link>
+      )}
+    </>
   );
-}
-
-export function SiteSidebar() {
-  return (
-    <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 flex-col border-r border-border bg-background px-5 py-6 lg:flex">
-      <SidebarContent />
-    </aside>
-  );
-}
-
-export function SiteHeader() {
-  const { user, canManageStudio } = useAuth();
-  const navigate = useNavigate();
-  const [menuOpen, setMenuOpen] = useState(false);
-  const initials = user ? getInitials(user.full_name) : "";
 
   return (
     <header className="sticky top-0 z-30 border-b border-border bg-background/90 backdrop-blur">
-      <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-5 py-4">
-        <div className="flex items-center gap-2">
-          <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
-            <SheetTrigger asChild>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                aria-label="Open navigation"
-                className="lg:hidden"
-              >
-                <Menu aria-hidden="true" />
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="left" className="w-72 px-5 py-6">
-              <SheetTitle className="sr-only">Navigation</SheetTitle>
-              <SidebarContent onNavigate={() => setMenuOpen(false)} />
-            </SheetContent>
-          </Sheet>
-          <Link to="/" aria-label="MØBIX Digital Lab home" className="lg:hidden">
+      <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-5 py-4">
+        <div className="flex items-center gap-6">
+          <Link to="/" aria-label="MØBIX Digital Lab home">
             <MobixLogo />
           </Link>
-          <p className="hidden text-base font-semibold text-secondary lg:block">
-            MØBIX Digital Lab
-          </p>
+          <nav
+            className="hidden items-center gap-5 text-sm font-medium text-muted-foreground md:flex"
+            aria-label="Dashboard navigation"
+          >
+            {navLinks}
+          </nav>
         </div>
         <div className="flex items-center gap-2">
           <DropdownMenu>
@@ -219,7 +157,12 @@ export function SiteHeader() {
                   Studio admin
                 </DropdownMenuItem>
               )}
-              {!user && (
+              {user ? (
+                <DropdownMenuItem onSelect={() => void logOut()}>
+                  <LogOut aria-hidden="true" />
+                  Sign out
+                </DropdownMenuItem>
+              ) : (
                 <DropdownMenuItem onSelect={() => void navigate({ to: "/auth" })}>
                   <LogIn aria-hidden="true" />
                   Sign in
@@ -228,6 +171,12 @@ export function SiteHeader() {
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
+        <nav
+          className="order-3 flex w-full gap-4 overflow-x-auto border-t border-border pt-3 text-sm font-medium text-muted-foreground md:hidden"
+          aria-label="Dashboard navigation mobile"
+        >
+          {navLinks}
+        </nav>
       </div>
     </header>
   );
@@ -236,18 +185,13 @@ export function SiteHeader() {
 export function DashboardLayout({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-screen bg-background">
-      <SiteSidebar />
-      <div className="lg:pl-64">
-        <SiteHeader />
-        <main className="min-h-[70vh] px-5 py-8">{children}</main>
-      </div>
+      <SiteHeader />
+      <main className="min-h-[70vh] px-5 py-8">{children}</main>
     </div>
   );
 }
 
 export function PublicHeader() {
-  const { user } = useAuth();
-
   return (
     <header className="sticky top-0 z-30 border-b border-border/70 bg-background/90 backdrop-blur">
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-5 py-4">
@@ -255,15 +199,13 @@ export function PublicHeader() {
           <MobixLogo />
         </Link>
         <nav className="hidden items-center gap-6 text-base font-medium text-muted-foreground md:flex">
-          {nav.slice(1).map((item) => (
+          {nav.map((item) => (
             <Link key={item.to} to={item.to} className="transition-colors hover:text-primary">
               {item.label}
             </Link>
           ))}
         </nav>
-        <Button asChild size="sm">
-          <Link to={user ? "/home" : "/auth"}>{user ? "Dashboard" : "Sign in"}</Link>
-        </Button>
+        <ApplicationDialog label="Apply now" />
       </div>
     </header>
   );

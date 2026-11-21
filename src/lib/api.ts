@@ -71,6 +71,27 @@ export type ApplicationInput = {
   message: string;
 };
 
+export type EnrollmentInput = {
+  course_id: string;
+  full_name: string;
+  email: string;
+  phone: string;
+  message: string;
+};
+
+export type EnrollmentRow = {
+  id: string;
+  course_id: string;
+  course_title: string;
+  status: "registered" | "contacted" | "confirmed" | "completed" | "cancelled";
+  message: string;
+  created_at: string;
+  level: string | null;
+  duration: string | null;
+  is_free: boolean;
+  price_kes: number | null;
+};
+
 export type EnquiryInput = {
   full_name: string;
   email: string;
@@ -187,6 +208,15 @@ export const contentApi = {
       body: input,
       token: null,
     }),
+};
+
+export const enrollmentApi = {
+  enroll: (input: EnrollmentInput) =>
+    apiFetch<{ id: string; alreadyEnrolled: boolean }>("/enrollments", {
+      method: "POST",
+      body: input,
+    }),
+  mine: () => apiFetch<EnrollmentRow[]>("/enrollments/mine"),
 };
 
 export const authApi = {

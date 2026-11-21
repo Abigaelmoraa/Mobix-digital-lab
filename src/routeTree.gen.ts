@@ -16,6 +16,8 @@ import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedStudioRouteImport } from './routes/_authenticated/studio'
 import { Route as PublicIndexRouteImport } from './routes/_public/index'
+import { Route as PublicAboutRouteImport } from './routes/_public/about'
+import { Route as PublicAdmissionsRouteImport } from './routes/_public/admissions'
 import { Route as PublicAuthRouteImport } from './routes/_public/auth'
 import { Route as PublicContactRouteImport } from './routes/_public/contact'
 import { Route as PublicCoursesRouteImport } from './routes/_public/courses'
@@ -54,6 +56,16 @@ const PublicIndexRoute = PublicIndexRouteImport.update({
   path: '/',
   getParentRoute: () => PublicRouteRoute,
 } as any)
+const PublicAboutRoute = PublicAboutRouteImport.update({
+  id: '/about',
+  path: '/about',
+  getParentRoute: () => PublicRouteRoute,
+} as any)
+const PublicAdmissionsRoute = PublicAdmissionsRouteImport.update({
+  id: '/admissions',
+  path: '/admissions',
+  getParentRoute: () => PublicRouteRoute,
+} as any)
 const PublicAuthRoute = PublicAuthRouteImport.update({
   id: '/auth',
   path: '/auth',
@@ -81,6 +93,8 @@ export interface FileRoutesByFullPath {
   '/profile': typeof AuthenticatedProfileRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/studio': typeof AuthenticatedStudioRoute
+  '/about': typeof PublicAboutRoute
+  '/admissions': typeof PublicAdmissionsRoute
   '/auth': typeof PublicAuthRoute
   '/contact': typeof PublicContactRoute
   '/courses': typeof PublicCoursesRoute
@@ -92,6 +106,8 @@ export interface FileRoutesByTo {
   '/profile': typeof AuthenticatedProfileRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/studio': typeof AuthenticatedStudioRoute
+  '/about': typeof PublicAboutRoute
+  '/admissions': typeof PublicAdmissionsRoute
   '/auth': typeof PublicAuthRoute
   '/contact': typeof PublicContactRoute
   '/courses': typeof PublicCoursesRoute
@@ -105,6 +121,8 @@ export interface FileRoutesById {
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/studio': typeof AuthenticatedStudioRoute
+  '/_public/about': typeof PublicAboutRoute
+  '/_public/admissions': typeof PublicAdmissionsRoute
   '/_public/auth': typeof PublicAuthRoute
   '/_public/contact': typeof PublicContactRoute
   '/_public/courses': typeof PublicCoursesRoute
@@ -119,6 +137,8 @@ export interface FileRouteTypes {
     | '/profile'
     | '/settings'
     | '/studio'
+    | '/about'
+    | '/admissions'
     | '/auth'
     | '/contact'
     | '/courses'
@@ -130,6 +150,8 @@ export interface FileRouteTypes {
     | '/profile'
     | '/settings'
     | '/studio'
+    | '/about'
+    | '/admissions'
     | '/auth'
     | '/contact'
     | '/courses'
@@ -142,6 +164,8 @@ export interface FileRouteTypes {
     | '/_authenticated/profile'
     | '/_authenticated/settings'
     | '/_authenticated/studio'
+    | '/_public/about'
+    | '/_public/admissions'
     | '/_public/auth'
     | '/_public/contact'
     | '/_public/courses'
@@ -205,6 +229,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicIndexRouteImport
       parentRoute: typeof PublicRouteRoute
     }
+    '/_public/about': {
+      id: '/_public/about'
+      path: '/about'
+      fullPath: '/about'
+      preLoaderRoute: typeof PublicAboutRouteImport
+      parentRoute: typeof PublicRouteRoute
+    }
+    '/_public/admissions': {
+      id: '/_public/admissions'
+      path: '/admissions'
+      fullPath: '/admissions'
+      preLoaderRoute: typeof PublicAdmissionsRouteImport
+      parentRoute: typeof PublicRouteRoute
+    }
     '/_public/auth': {
       id: '/_public/auth'
       path: '/auth'
@@ -254,6 +292,8 @@ const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
 interface PublicRouteRouteChildren {
+  PublicAboutRoute: typeof PublicAboutRoute
+  PublicAdmissionsRoute: typeof PublicAdmissionsRoute
   PublicAuthRoute: typeof PublicAuthRoute
   PublicContactRoute: typeof PublicContactRoute
   PublicCoursesRoute: typeof PublicCoursesRoute
@@ -262,6 +302,8 @@ interface PublicRouteRouteChildren {
 }
 
 const PublicRouteRouteChildren: PublicRouteRouteChildren = {
+  PublicAboutRoute: PublicAboutRoute,
+  PublicAdmissionsRoute: PublicAdmissionsRoute,
   PublicAuthRoute: PublicAuthRoute,
   PublicContactRoute: PublicContactRoute,
   PublicCoursesRoute: PublicCoursesRoute,

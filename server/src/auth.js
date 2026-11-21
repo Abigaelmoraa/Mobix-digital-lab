@@ -18,6 +18,18 @@ function readToken(request) {
   return header.replace(/^Bearer\s+/i, "").trim();
 }
 
+export function optionalAuth(request, _response, next) {
+  const token = readToken(request);
+  if (token) {
+    try {
+      request.auth = jwt.verify(token, secret);
+    } catch {
+      request.auth = null;
+    }
+  }
+  return next();
+}
+
 export function authRequired(request, response, next) {
   const token = readToken(request);
   if (!token) {

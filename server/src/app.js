@@ -5,11 +5,12 @@ import bcrypt from "bcryptjs";
 import crypto from "node:crypto";
 import { z } from "zod";
 import { pool, query, checkConnection } from "./db.js";
-import { signToken, authRequired, adminRequired } from "./auth.js";
+import { signToken, optionalAuth, authRequired, adminRequired } from "./auth.js";
 import {
   registerSchema,
   loginSchema,
   applicationSchema,
+  enrollmentSchema,
   enquirySchema,
   serviceSchema,
   courseSchema,
@@ -177,6 +178,58 @@ app.post(
       ],
     );
     return response.status(201).json({ id });
+  }),
+);
+
+app.post(
+  "/api/enrollments",
+  optionalAuth,
+  route(async (request, response) => {
+    const input = enrollmentSchema.parse(request.body);
+    const courses = await query("SELECT id, title FROM courses WHERE id = ? AND is_published = 1", [
+      input.course_id,
+    ]);
+    if (!courses.length) {
+      return response.status(400).json({ error: "Choose a published course" });
+    }
+    const id = crypto.randomUUID();
+    const userId = request.auth?.id ?? null;
+    await query(
+      "INSERT IGNORE INTO course_enrollments (id, user_id, full_name, email, phone, course_id, course_title, message) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+      [
+        id,
+        userId,
+        input.full_name,
+        input.email,
+        input.phone,
+        input.course_id,
+        courses[0].title,
+        input.message,
+      ],
+    );
+    const rows = await query(
+      "SELECT id FROM course_enrollments WHERE email = ? AND course_id = ?",
+      [input.email, input.course_id],
+    );
+    return response.status(201).json({ id: rows[0].id, alreadyEnrolled: rows[0].id !== id });
+  }),
+);
+
+app.get(
+  "/api/enrollments/mine",
+  authRequired,
+  route(async (request, response) => {
+    const rows = await query(
+      "SELECT e.id, e.course_id, e.course_title, e.status, e.message, e.created_at, c.level, c.duration, c.is_free, c.price_kes FROM course_enrollments e LEFT JOIN courses c ON c.id = e.course_id WHERE e.user_id = ? OR LOWER(e.email) = LOWER(?) ORDER BY e.created_at DESC",
+      [request.auth.id, request.auth.email],
+    );
+    response.json(
+      rows.map((row) => ({
+        ...row,
+        is_free: Boolean(row.is_free),
+        price_kes: row.price_kes == null ? null : Number(row.price_kes),
+      })),
+    );
   }),
 );
 

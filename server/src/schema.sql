@@ -61,6 +61,22 @@ CREATE TABLE IF NOT EXISTS course_applications (
   INDEX idx_applications_status (status, created_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+CREATE TABLE IF NOT EXISTS course_enrollments (
+  id CHAR(36) NOT NULL PRIMARY KEY,
+  user_id CHAR(36) NULL,
+  full_name VARCHAR(120) NOT NULL,
+  email VARCHAR(255) NOT NULL,
+  phone VARCHAR(40) NOT NULL DEFAULT '',
+  course_id CHAR(36) NOT NULL,
+  course_title VARCHAR(160) NOT NULL,
+  message TEXT NOT NULL,
+  status ENUM('registered', 'contacted', 'confirmed', 'completed', 'cancelled') NOT NULL DEFAULT 'registered',
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  UNIQUE KEY uniq_enrollment_email_course (email, course_id),
+  INDEX idx_enrollments_status (status, created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 CREATE TABLE IF NOT EXISTS service_enquiries (
   id CHAR(36) NOT NULL PRIMARY KEY,
   full_name VARCHAR(120) NOT NULL,

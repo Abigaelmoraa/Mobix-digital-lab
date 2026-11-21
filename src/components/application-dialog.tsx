@@ -21,7 +21,15 @@ const schema = z.object({
   full_name: z.string().trim().min(2, "Please enter your full name").max(120),
   email: z.string().trim().email("Enter a valid email").max(255),
   phone: z.string().trim().min(7, "Enter a valid phone number").max(40),
-  message: z.string().trim().max(2000),
+  course_id: z.string().min(1, "Choose a course to enrol in"),
+  course_title: z.string().trim().max(160),
+  study_mode: z.string().min(1, "Choose a study mode"),
+  experience_level: z.string().min(1, "Choose your experience level"),
+  preferred_start: z.string().min(1, "Choose a preferred start"),
+  location: z.string().trim().min(2, "Enter your location").max(120),
+  source: z.string().trim().max(120),
+  goals: z.string().trim().min(10, "Tell us what you want to achieve").max(1500),
+  notes: z.string().trim().max(1000),
 });
 
 const blankForm = {
@@ -30,10 +38,52 @@ const blankForm = {
   phone: "",
   course_id: "",
   course_title: "",
-  message: "",
+  study_mode: "",
+  experience_level: "",
+  preferred_start: "",
+  location: "",
+  source: "",
+  goals: "",
+  notes: "",
 };
 
-export function ApplicationDialog({ className }: { className?: string } = {}) {
+const studyModes = [
+  { value: "in-person", label: "In-person at the Nairobi studio" },
+  { value: "online", label: "Online live sessions" },
+  { value: "hybrid", label: "Hybrid (in-person and online)" },
+];
+
+const experienceLevels = [
+  { value: "beginner", label: "Beginner — I am starting from scratch" },
+  { value: "some", label: "Some experience — I have tried the basics" },
+  { value: "professional", label: "Working professional — I want to level up" },
+];
+
+const startOptions = [
+  { value: "asap", label: "As soon as possible" },
+  { value: "this-month", label: "This month" },
+  { value: "next-month", label: "Next month" },
+  { value: "exploring", label: "I am still exploring" },
+];
+
+const sourceOptions = [
+  { value: "search", label: "Search engine" },
+  { value: "social", label: "Social media" },
+  { value: "friend", label: "Friend or colleague" },
+  { value: "studio", label: "Visited the studio" },
+  { value: "other", label: "Other" },
+];
+
+function optionLabel(options: { value: string; label: string }[], value: string) {
+  return options.find((option) => option.value === value)?.label ?? value;
+}
+
+type ApplicationDialogProps = {
+  className?: string;
+  label?: string;
+};
+
+export function ApplicationDialog({ className, label = "Apply now" }: ApplicationDialogProps = {}) {
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState(blankForm);
   const [sending, setSending] = useState(false);
@@ -61,20 +111,35 @@ export function ApplicationDialog({ className }: { className?: string } = {}) {
       setError(parsed.error.issues[0]?.message ?? "Please check your details");
       return;
     }
-    if (!form.course_id) {
-      setError("Choose a course to enrol in.");
+    if (form.course_id !== "other" && !selectedCourse) {
+      setError("Choose a published course.");
       return;
     }
     if (otherSelected && form.course_title.trim().length < 2) {
       setError("Tell us which course you want to enrol in.");
       return;
     }
+
+    const details = [
+      `Study mode: ${optionLabel(studyModes, form.study_mode)}`,
+      `Experience: ${optionLabel(experienceLevels, form.experience_level)}`,
+      `Preferred start: ${optionLabel(startOptions, form.preferred_start)}`,
+      `Location: ${form.location.trim()}`,
+      `Heard about us: ${optionLabel(sourceOptions, form.source)}`,
+      "",
+      `Goals: ${form.goals.trim()}`,
+    ];
+    if (form.notes.trim()) details.push("", `Additional notes: ${form.notes.trim()}`);
+
     setSending(true);
     try {
       await contentApi.submitApplication({
-        ...parsed.data,
+        full_name: parsed.data.full_name,
+        email: parsed.data.email,
+        phone: parsed.data.phone,
         course_id: form.course_id,
         course_title: otherSelected ? form.course_title.trim() : (selectedCourse?.title ?? ""),
+        message: details.join("\n"),
       });
       setSent(true);
     } catch (err) {
@@ -88,15 +153,15 @@ export function ApplicationDialog({ className }: { className?: string } = {}) {
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button type="button" className={className}>
-          Apply now
+          {label}
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>Apply for admission</DialogTitle>
           <DialogDescription>
-            Tell us about yourself and the course you would like to join. We will be in touch with
-            the next steps.
+            Tell us about yourself, your goals, and the course you would like to join. Our team will
+            contact you with the next steps.
           </DialogDescription>
         </DialogHeader>
         {sent ? (
@@ -110,16 +175,30 @@ export function ApplicationDialog({ className }: { className?: string } = {}) {
           </div>
         ) : (
           <form onSubmit={(event) => void onSubmit(event)} className="space-y-4" noValidate>
-            <div className="space-y-2">
-              <Label htmlFor="application-name">Full name</Label>
-              <Input
-                id="application-name"
-                value={form.full_name}
-                onChange={(event) => setForm({ ...form, full_name: event.target.value })}
-                maxLength={120}
-                required
-              />
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="application-name">Full name</Label>
+                <Input
+                  id="application-name"
+                  value={form.full_name}
+                  onChange={(event) => setForm({ ...form, full_name: event.target.value })}
+                  maxLength={120}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="application-phone">Phone</Label>
+                <Input
+                  id="application-phone"
+                  type="tel"
+                  value={form.phone}
+                  onChange={(event) => setForm({ ...form, phone: event.target.value })}
+                  maxLength={40}
+                  required
+                />
+              </div>
             </div>
+
             <div className="space-y-2">
               <Label htmlFor="application-email">Email</Label>
               <Input
@@ -131,17 +210,7 @@ export function ApplicationDialog({ className }: { className?: string } = {}) {
                 required
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="application-phone">Phone</Label>
-              <Input
-                id="application-phone"
-                type="tel"
-                value={form.phone}
-                onChange={(event) => setForm({ ...form, phone: event.target.value })}
-                maxLength={40}
-                required
-              />
-            </div>
+
             <div className="space-y-2">
               <Label htmlFor="application-course">Course to enrol in</Label>
               <select
@@ -167,6 +236,7 @@ export function ApplicationDialog({ className }: { className?: string } = {}) {
                 </p>
               )}
             </div>
+
             {otherSelected && (
               <div className="space-y-2">
                 <Label htmlFor="application-course-title">Course name</Label>
@@ -179,16 +249,81 @@ export function ApplicationDialog({ className }: { className?: string } = {}) {
                 />
               </div>
             )}
-            <div className="space-y-2">
-              <Label htmlFor="application-message">Anything else? (optional)</Label>
-              <Textarea
-                id="application-message"
-                value={form.message}
-                onChange={(event) => setForm({ ...form, message: event.target.value })}
-                rows={3}
-                maxLength={2000}
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <SelectField
+                id="application-mode"
+                label="Preferred study mode"
+                value={form.study_mode}
+                onChange={(value) => setForm({ ...form, study_mode: value })}
+                options={studyModes}
+                placeholder="Choose a study mode"
+              />
+              <SelectField
+                id="application-experience"
+                label="Current experience"
+                value={form.experience_level}
+                onChange={(value) => setForm({ ...form, experience_level: value })}
+                options={experienceLevels}
+                placeholder="Choose your experience level"
               />
             </div>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <SelectField
+                id="application-start"
+                label="Preferred start"
+                value={form.preferred_start}
+                onChange={(value) => setForm({ ...form, preferred_start: value })}
+                options={startOptions}
+                placeholder="Choose a start window"
+              />
+              <div className="space-y-2">
+                <Label htmlFor="application-location">Location</Label>
+                <Input
+                  id="application-location"
+                  value={form.location}
+                  onChange={(event) => setForm({ ...form, location: event.target.value })}
+                  placeholder="Town or city"
+                  maxLength={120}
+                  required
+                />
+              </div>
+            </div>
+
+            <SelectField
+              id="application-source"
+              label="How did you hear about us?"
+              value={form.source}
+              onChange={(value) => setForm({ ...form, source: value })}
+              options={sourceOptions}
+              placeholder="Choose an option"
+            />
+
+            <div className="space-y-2">
+              <Label htmlFor="application-goals">What do you want to achieve?</Label>
+              <Textarea
+                id="application-goals"
+                value={form.goals}
+                onChange={(event) => setForm({ ...form, goals: event.target.value })}
+                rows={4}
+                maxLength={1500}
+                placeholder="Tell us about your goals and why this course interests you."
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="application-notes">Anything else? (optional)</Label>
+              <Textarea
+                id="application-notes"
+                value={form.notes}
+                onChange={(event) => setForm({ ...form, notes: event.target.value })}
+                rows={3}
+                maxLength={1000}
+              />
+            </div>
+
             {error && (
               <p role="alert" className="text-sm text-destructive">
                 {error}
@@ -201,5 +336,41 @@ export function ApplicationDialog({ className }: { className?: string } = {}) {
         )}
       </DialogContent>
     </Dialog>
+  );
+}
+
+function SelectField({
+  id,
+  label,
+  value,
+  onChange,
+  options,
+  placeholder,
+}: {
+  id: string;
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  options: { value: string; label: string }[];
+  placeholder: string;
+}) {
+  return (
+    <div className="space-y-2">
+      <Label htmlFor={id}>{label}</Label>
+      <select
+        id={id}
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm outline-none focus:ring-1 focus:ring-ring"
+        required
+      >
+        <option value="">{placeholder}</option>
+        {options.map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+    </div>
   );
 }

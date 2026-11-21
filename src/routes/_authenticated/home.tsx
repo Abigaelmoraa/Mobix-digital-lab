@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useSuspenseQuery } from "@tanstack/react-query";
+import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import {
   ArrowRight,
   BookOpen,
@@ -17,6 +17,7 @@ import {
 
 import { EmptyNote, LoadError } from "@/components/listings";
 import { useAuth } from "@/hooks/use-auth";
+import { enrollmentApi } from "@/lib/api";
 import { coursesQuery, servicesQuery } from "@/lib/public-queries";
 
 export const Route = createFileRoute("/_authenticated/home")({
@@ -41,6 +42,10 @@ export const Route = createFileRoute("/_authenticated/home")({
 function Dashboard() {
   const { data: services } = useSuspenseQuery(servicesQuery);
   const { data: courses } = useSuspenseQuery(coursesQuery);
+  const { data: enrollments = [], isLoading: enrollmentsLoading } = useQuery({
+    queryKey: ["enrollments", "mine"],
+    queryFn: enrollmentApi.mine,
+  });
   const { user, canManageStudio } = useAuth();
 
   const firstName = user?.full_name.trim().split(/\s+/)[0] ?? "there";
@@ -136,9 +141,9 @@ function Dashboard() {
         />
         <StatCard
           icon={CheckCircle2}
-          label="Account status"
-          value="Active"
-          hint="Signed in and ready"
+          label="My registrations"
+          value={String(enrollments.length)}
+          hint="Courses you joined"
         />
         <StatCard
           icon={LayoutDashboard}
@@ -168,6 +173,57 @@ function Dashboard() {
               </span>
             </Link>
           ))}
+        </div>
+      </section>
+
+      <section className="mt-10">
+        <SectionHeading title="My course registrations" />
+        <div className="mt-5 rounded-3xl border border-border bg-card p-6 md:p-7">
+          {enrollmentsLoading ? (
+            <p className="text-base text-muted-foreground">Loading your registrations…</p>
+          ) : enrollments.length ? (
+            <ul className="divide-y divide-border">
+              {enrollments.map((enrollment) => (
+                <li
+                  key={enrollment.id}
+                  className="flex flex-wrap items-center justify-between gap-3 py-4 first:pt-0"
+                >
+                  <div>
+                    <p className="font-semibold text-primary">{enrollment.course_title}</p>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      {enrollment.level || "All levels"} ·{" "}
+                      {enrollment.duration || "Duration to be confirmed"}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="rounded-full bg-accent px-3 py-1 text-xs font-semibold capitalize text-secondary">
+                      {enrollment.status}
+                    </span>
+                    <span className="text-sm text-muted-foreground">
+                      {new Intl.DateTimeFormat("en-KE", {
+                        day: "numeric",
+                        month: "short",
+                        year: "numeric",
+                      }).format(new Date(enrollment.created_at))}
+                    </span>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <div className="text-center">
+              <p className="text-base text-muted-foreground">
+                You have not registered for a course yet.
+              </p>
+              <Link
+                to="/courses"
+                className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-secondary hover:underline"
+              >
+                Browse the catalogue
+                <ArrowRight className="size-4" />
+              </Link>
+            </div>
+          )}
         </div>
       </section>
 

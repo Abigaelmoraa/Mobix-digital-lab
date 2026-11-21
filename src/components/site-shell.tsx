@@ -1,9 +1,34 @@
+import { useState, type ReactNode } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { Facebook, Instagram, MapPin, MessageCircle, Send } from "lucide-react";
+import {
+  Bell,
+  CircleUserRound,
+  Facebook,
+  Instagram,
+  LayoutDashboard,
+  LogIn,
+  LogOut,
+  MapPin,
+  Menu,
+  MessageCircle,
+  Send,
+  Settings,
+  UserRound,
+} from "lucide-react";
 
 import { ApplicationDialog } from "@/components/application-dialog";
 import { MobixLogo } from "@/components/mobix-logo";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { useAuth } from "@/hooks/use-auth";
 import { PHONE_DISPLAY, PHONE_TEL } from "@/lib/contact";
 
@@ -18,6 +43,11 @@ const LOCATION_URL = `https://www.google.com/maps/search/?api=1&query=${encodeUR
   "Westlands opposite The Alchemist Nairobi Kenya",
 )}`;
 
+function getInitials(name: string) {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  return `${parts[0]?.[0] ?? ""}${parts[1]?.[0] ?? ""}`.toUpperCase();
+}
+
 function TikTokIcon({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 24 24" className={className} fill="currentColor" aria-hidden="true">
@@ -26,58 +56,193 @@ function TikTokIcon({ className }: { className?: string }) {
   );
 }
 
-export function SiteHeader() {
-  const { user, loading, signOut: signUserOut } = useAuth();
+function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
+  const { user, canManageStudio, signOut } = useAuth();
   const navigate = useNavigate();
 
-  async function signOut() {
-    await signUserOut();
+  async function logOut() {
+    await signOut();
     await navigate({ to: "/auth", replace: true });
+    onNavigate?.();
   }
 
   return (
-    <header className="sticky top-0 z-40 border-b border-border bg-background/90 backdrop-blur">
-      <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-5 py-4">
-        <Link to="/" aria-label="MØBIX Digital Lab home">
-          <MobixLogo />
-        </Link>
-        <nav className="flex flex-wrap items-center gap-1 text-base font-medium">
-          {nav.map((n) => (
-            <Link
-              key={n.to}
-              to={n.to}
-              activeOptions={{ exact: n.to === "/" }}
-              className="rounded-full px-4 py-2 text-muted-foreground transition-colors hover:text-primary"
-              activeProps={{ className: "bg-accent text-primary" }}
+    <div className="flex h-full flex-col gap-6">
+      <Link to="/" onClick={onNavigate} aria-label="MØBIX Digital Lab home">
+        <MobixLogo />
+      </Link>
+      <nav className="flex flex-col gap-1 text-base font-medium" aria-label="Main navigation">
+        {nav.map((item) => (
+          <Link
+            key={item.to}
+            to={item.to}
+            onClick={onNavigate}
+            activeOptions={{ exact: item.to === "/" }}
+            className="rounded-full px-4 py-2 text-muted-foreground transition-colors hover:bg-accent hover:text-primary"
+            activeProps={{ className: "bg-accent text-primary" }}
+          >
+            {item.label}
+          </Link>
+        ))}
+        {canManageStudio && (
+          <Link
+            to="/studio"
+            onClick={onNavigate}
+            className="rounded-full px-4 py-2 text-muted-foreground transition-colors hover:bg-accent hover:text-primary"
+            activeProps={{ className: "bg-accent text-primary" }}
+          >
+            Dashboard
+          </Link>
+        )}
+        <ApplicationDialog className="mt-3 w-full" />
+      </nav>
+      <div className="mt-auto space-y-3 border-t border-border pt-5">
+        {user ? (
+          <>
+            <p className="truncate px-3 text-sm text-muted-foreground">{user.email}</p>
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full justify-start"
+              onClick={() => void logOut()}
             >
-              {n.label}
-            </Link>
-          ))}
-          <ApplicationDialog />
-          {!loading &&
-            (user ? (
-              <>
-                <Link
-                  to="/studio"
-                  className="rounded-full px-4 py-2 text-muted-foreground transition-colors hover:text-primary"
-                >
-                  Dashboard
-                </Link>
-                <Button type="button" variant="ghost" onClick={() => void signOut()}>
-                  Sign out
-                </Button>
-              </>
-            ) : (
-              <Link
-                to="/auth"
-                className="rounded-full px-4 py-2 text-muted-foreground transition-colors hover:text-primary"
+              <LogOut aria-hidden="true" />
+              Log out
+            </Button>
+          </>
+        ) : (
+          <Link
+            to="/auth"
+            onClick={onNavigate}
+            className="flex w-full items-center justify-center gap-2 rounded-md border border-input bg-background px-4 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-accent"
+          >
+            <LogIn aria-hidden="true" className="size-4" />
+            Sign in
+          </Link>
+        )}
+      </div>
+    </div>
+  );
+}
+
+export function SiteSidebar() {
+  return (
+    <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 flex-col border-r border-border bg-background px-5 py-6 lg:flex">
+      <SidebarContent />
+    </aside>
+  );
+}
+
+export function SiteHeader() {
+  const { user, canManageStudio } = useAuth();
+  const navigate = useNavigate();
+  const [menuOpen, setMenuOpen] = useState(false);
+  const initials = user ? getInitials(user.full_name) : "";
+
+  return (
+    <header className="sticky top-0 z-30 border-b border-border bg-background/90 backdrop-blur">
+      <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-5 py-4">
+        <div className="flex items-center gap-2">
+          <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
+            <SheetTrigger asChild>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                aria-label="Open navigation"
+                className="lg:hidden"
               >
-                Sign in
-              </Link>
-            ))}
-        </nav>
+                <Menu aria-hidden="true" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="left" className="w-72 px-5 py-6">
+              <SheetTitle className="sr-only">Navigation</SheetTitle>
+              <SidebarContent onNavigate={() => setMenuOpen(false)} />
+            </SheetContent>
+          </Sheet>
+          <Link to="/" aria-label="MØBIX Digital Lab home" className="lg:hidden">
+            <MobixLogo />
+          </Link>
+          <p className="hidden text-base font-semibold text-secondary lg:block">
+            MØBIX Digital Lab
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                aria-label="Notifications"
+                className="relative"
+              >
+                <Bell aria-hidden="true" />
+                <span className="absolute right-2 top-2 size-2 rounded-full bg-secondary" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-64">
+              <DropdownMenuLabel>Notifications</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <p className="px-2 py-3 text-sm text-muted-foreground">You're all caught up.</p>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button type="button" variant="ghost" size="icon" aria-label="Account menu">
+                <Avatar className="size-8">
+                  <AvatarFallback>
+                    {initials || <CircleUserRound aria-hidden="true" className="size-4" />}
+                  </AvatarFallback>
+                </Avatar>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuLabel>
+                <span className="block truncate">{user?.full_name ?? "Guest"}</span>
+                <span className="block truncate text-xs font-normal text-muted-foreground">
+                  {user?.email ?? "Not signed in"}
+                </span>
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onSelect={() => void navigate({ to: "/profile" })}>
+                <UserRound aria-hidden="true" />
+                Profile
+              </DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => void navigate({ to: "/settings" })}>
+                <Settings aria-hidden="true" />
+                Settings
+              </DropdownMenuItem>
+              {canManageStudio && (
+                <DropdownMenuItem onSelect={() => void navigate({ to: "/studio" })}>
+                  <LayoutDashboard aria-hidden="true" />
+                  Studio dashboard
+                </DropdownMenuItem>
+              )}
+              {!user && (
+                <DropdownMenuItem onSelect={() => void navigate({ to: "/auth" })}>
+                  <LogIn aria-hidden="true" />
+                  Sign in
+                </DropdownMenuItem>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </div>
     </header>
+  );
+}
+
+export function SiteLayout({ children }: { children: ReactNode }) {
+  return (
+    <div className="min-h-screen bg-background">
+      <SiteSidebar />
+      <div className="lg:pl-64">
+        <SiteHeader />
+        <main className="min-h-[70vh]">{children}</main>
+        <SiteFooter />
+      </div>
+    </div>
   );
 }
 

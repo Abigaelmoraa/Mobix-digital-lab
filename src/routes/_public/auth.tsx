@@ -1,4 +1,4 @@
-import { useState, type ComponentProps, type FormEvent } from "react";
+import { useEffect, useState, type ComponentProps, type FormEvent } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
@@ -6,12 +6,17 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/use-auth";
 
-export const Route = createFileRoute("/auth")({
+export const Route = createFileRoute("/_public/auth")({
+  validateSearch: (
+    search: Record<string, unknown>,
+  ): { mode?: "sign-up" | "sign-in" | undefined } => ({
+    mode: search["mode"] === "sign-up" ? "sign-up" : undefined,
+  }),
   head: () => ({
     meta: [
-      { title: "Account sign-in — MØBIX Digital Lab" },
+      { title: "Sign in or create an account — MØBIX Digital Lab" },
       { name: "description", content: "Sign in or create a MØBIX Digital Lab account." },
-      { property: "og:title", content: "Account sign-in — MØBIX Digital Lab" },
+      { property: "og:title", content: "Sign in or create an account — MØBIX Digital Lab" },
       { property: "og:description", content: "Sign in or create a MØBIX Digital Lab account." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -31,12 +36,18 @@ const signUpSchema = signInSchema.extend({
 });
 
 function AuthPage() {
-  const [mode, setMode] = useState<"sign-in" | "sign-up">("sign-in");
+  const { mode: searchMode } = Route.useSearch();
+  const [mode, setMode] = useState<"sign-in" | "sign-up">(searchMode ?? "sign-in");
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [busy, setBusy] = useState(false);
   const { user, loading, signIn, signUp } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    setMode(searchMode ?? "sign-in");
+    setError("");
+  }, [searchMode]);
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();

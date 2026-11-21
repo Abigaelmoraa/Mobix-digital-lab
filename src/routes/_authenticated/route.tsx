@@ -1,4 +1,6 @@
 import { createFileRoute, redirect, Outlet } from "@tanstack/react-router";
+
+import { DashboardLayout } from "@/components/site-shell";
 import { authApi, getToken } from "@/lib/api";
 
 export const Route = createFileRoute("/_authenticated")({
@@ -12,5 +14,9 @@ export const Route = createFileRoute("/_authenticated")({
       throw redirect({ to: "/auth" });
     }
   },
-  component: () => <Outlet />,
+  component: () => (
+    <DashboardLayout>
+      <Outlet />
+    </DashboardLayout>
+  ),
 });

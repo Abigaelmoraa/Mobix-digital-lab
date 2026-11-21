@@ -3,7 +3,7 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { servicesQuery } from "@/lib/public-queries";
 import { EmptyNote, LoadError, ServiceCard } from "@/components/listings";
 
-export const Route = createFileRoute("/services")({
+export const Route = createFileRoute("/_public/services")({
   loader: ({ context }) => context.queryClient.ensureQueryData(servicesQuery),
   head: () => ({
     meta: [

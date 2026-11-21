@@ -233,15 +233,48 @@ export function SiteHeader() {
   );
 }
 
-export function SiteLayout({ children }: { children: ReactNode }) {
+export function DashboardLayout({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-screen bg-background">
       <SiteSidebar />
       <div className="lg:pl-64">
         <SiteHeader />
-        <main className="min-h-[70vh]">{children}</main>
-        <SiteFooter />
+        <main className="min-h-[70vh] px-5 py-8">{children}</main>
       </div>
+    </div>
+  );
+}
+
+export function PublicHeader() {
+  const { user } = useAuth();
+
+  return (
+    <header className="sticky top-0 z-30 border-b border-border/70 bg-background/90 backdrop-blur">
+      <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-5 py-4">
+        <Link to="/" aria-label="MØBIX Digital Lab home">
+          <MobixLogo />
+        </Link>
+        <nav className="hidden items-center gap-6 text-base font-medium text-muted-foreground md:flex">
+          {nav.slice(1).map((item) => (
+            <Link key={item.to} to={item.to} className="transition-colors hover:text-primary">
+              {item.label}
+            </Link>
+          ))}
+        </nav>
+        <Button asChild size="sm">
+          <Link to={user ? "/home" : "/auth"}>{user ? "Dashboard" : "Sign in"}</Link>
+        </Button>
+      </div>
+    </header>
+  );
+}
+
+export function PublicLayout({ children }: { children: ReactNode }) {
+  return (
+    <div className="min-h-screen bg-background">
+      <PublicHeader />
+      <main className="min-h-[70vh]">{children}</main>
+      <SiteFooter />
     </div>
   );
 }

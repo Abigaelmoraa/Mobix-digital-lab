@@ -10,7 +10,6 @@ import {
 } from "@tanstack/react-router";
 import { type ReactNode } from "react";
 
-import { SiteLayout } from "@/components/site-shell";
 import { AuthProvider } from "@/hooks/use-auth";
 import appCss from "../styles.css?url";
 
@@ -126,9 +125,7 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <SiteLayout>
-          <Outlet />
-        </SiteLayout>
+        <Outlet />
       </AuthProvider>
     </QueryClientProvider>
   );

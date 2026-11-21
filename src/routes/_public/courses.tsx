@@ -3,7 +3,7 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { coursesQuery } from "@/lib/public-queries";
 import { CourseCard, EmptyNote, LoadError } from "@/components/listings";
 
-export const Route = createFileRoute("/courses")({
+export const Route = createFileRoute("/_public/courses")({
   loader: ({ context }) => context.queryClient.ensureQueryData(coursesQuery),
   head: () => ({
     meta: [

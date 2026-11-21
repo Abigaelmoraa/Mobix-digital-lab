@@ -17,7 +17,7 @@ import { CourseCard, EmptyNote, LoadError, ServiceCard } from "@/components/list
 import { WHATSAPP_URL } from "@/lib/contact";
 import { coursesQuery, servicesQuery } from "@/lib/public-queries";
 
-export const Route = createFileRoute("/home")({
+export const Route = createFileRoute("/_authenticated/home")({
   loader: ({ context }) =>
     Promise.all([
       context.queryClient.ensureQueryData(servicesQuery),

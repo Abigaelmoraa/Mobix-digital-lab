@@ -4,7 +4,7 @@ import { z } from "zod";
 import { contentApi } from "@/lib/api";
 import { PHONE_DISPLAY, PHONE_TEL, WHATSAPP_URL } from "@/lib/contact";
 
-export const Route = createFileRoute("/contact")({
+export const Route = createFileRoute("/_public/contact")({
   head: () => ({
     meta: [
       { title: "Contact — MØBIX Digital Lab" },

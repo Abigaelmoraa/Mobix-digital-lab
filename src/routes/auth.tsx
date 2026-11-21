@@ -68,7 +68,7 @@ function AuthPage() {
           phone: signup.data.phone,
         });
       }
-      await navigate({ to: "/studio" });
+      await navigate({ to: "/home" });
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "We couldn't complete your request. Please try again.",
@@ -92,8 +92,8 @@ function AuthPage() {
         <p className="text-base font-semibold text-secondary">MØBIX Digital Lab</p>
         <h1 className="mt-3 font-display text-4xl font-bold text-primary">You’re signed in</h1>
         <p className="mt-3 text-muted-foreground">{user.email}</p>
-        <Button className="mt-7" onClick={() => void navigate({ to: "/studio" })}>
-          Open studio
+        <Button className="mt-7" onClick={() => void navigate({ to: "/home" })}>
+          Go to home
         </Button>
       </section>
     );

@@ -33,7 +33,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { PHONE_DISPLAY, PHONE_TEL } from "@/lib/contact";
 
 const nav = [
-  { to: "/", label: "Home" },
+  { to: "/home", label: "Home" },
   { to: "/services", label: "Services" },
   { to: "/courses", label: "Courses" },
   { to: "/contact", label: "Contact" },
@@ -62,7 +62,7 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
 
   async function logOut() {
     await signOut();
-    await navigate({ to: "/auth", replace: true });
+    await navigate({ to: "/", replace: true });
     onNavigate?.();
   }
 
@@ -77,7 +77,7 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
             key={item.to}
             to={item.to}
             onClick={onNavigate}
-            activeOptions={{ exact: item.to === "/" }}
+            activeOptions={{ exact: item.to === "/home" }}
             className="rounded-full px-4 py-2 text-muted-foreground transition-colors hover:bg-accent hover:text-primary"
             activeProps={{ className: "bg-accent text-primary" }}
           >
@@ -107,7 +107,7 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
               onClick={() => void logOut()}
             >
               <LogOut aria-hidden="true" />
-              Log out
+              Sign out
             </Button>
           </>
         ) : (

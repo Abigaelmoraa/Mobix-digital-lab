@@ -14,6 +14,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as CoursesRouteImport } from './routes/courses'
+import { Route as HomeRouteImport } from './routes/home'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as ServicesRouteImport } from './routes/services'
 import { Route as SettingsRouteImport } from './routes/settings'
@@ -43,6 +44,11 @@ const CoursesRoute = CoursesRouteImport.update({
   path: '/courses',
   getParentRoute: () => rootRouteImport,
 } as any)
+const HomeRoute = HomeRouteImport.update({
+  id: '/home',
+  path: '/home',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProfileRoute = ProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
@@ -69,6 +75,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/contact': typeof ContactRoute
   '/courses': typeof CoursesRoute
+  '/home': typeof HomeRoute
   '/profile': typeof ProfileRoute
   '/services': typeof ServicesRoute
   '/settings': typeof SettingsRoute
@@ -79,6 +86,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/contact': typeof ContactRoute
   '/courses': typeof CoursesRoute
+  '/home': typeof HomeRoute
   '/profile': typeof ProfileRoute
   '/services': typeof ServicesRoute
   '/settings': typeof SettingsRoute
@@ -91,6 +99,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/contact': typeof ContactRoute
   '/courses': typeof CoursesRoute
+  '/home': typeof HomeRoute
   '/profile': typeof ProfileRoute
   '/services': typeof ServicesRoute
   '/settings': typeof SettingsRoute
@@ -103,6 +112,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/contact'
     | '/courses'
+    | '/home'
     | '/profile'
     | '/services'
     | '/settings'
@@ -113,6 +123,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/contact'
     | '/courses'
+    | '/home'
     | '/profile'
     | '/services'
     | '/settings'
@@ -124,6 +135,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/contact'
     | '/courses'
+    | '/home'
     | '/profile'
     | '/services'
     | '/settings'
@@ -136,6 +148,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   ContactRoute: typeof ContactRoute
   CoursesRoute: typeof CoursesRoute
+  HomeRoute: typeof HomeRoute
   ProfileRoute: typeof ProfileRoute
   ServicesRoute: typeof ServicesRoute
   SettingsRoute: typeof SettingsRoute
@@ -176,6 +189,13 @@ declare module '@tanstack/react-router' {
       path: '/courses'
       fullPath: '/courses'
       preLoaderRoute: typeof CoursesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/home': {
+      id: '/home'
+      path: '/home'
+      fullPath: '/home'
+      preLoaderRoute: typeof HomeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/profile': {
@@ -226,6 +246,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   ContactRoute: ContactRoute,
   CoursesRoute: CoursesRoute,
+  HomeRoute: HomeRoute,
   ProfileRoute: ProfileRoute,
   ServicesRoute: ServicesRoute,
   SettingsRoute: SettingsRoute,

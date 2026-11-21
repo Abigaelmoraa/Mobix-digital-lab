@@ -10,6 +10,7 @@ import {
 } from "@tanstack/react-router";
 import { type ReactNode } from "react";
 
+import { WhatsAppFloat } from "@/components/whatsapp-float";
 import { AuthProvider } from "@/hooks/use-auth";
 import appCss from "../styles.css?url";
 
@@ -126,6 +127,7 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <Outlet />
+        <WhatsAppFloat />
       </AuthProvider>
     </QueryClientProvider>
   );
